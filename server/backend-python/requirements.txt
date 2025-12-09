@@ -23,7 +23,7 @@ torch==2.1.1
 sentence-transformers==2.2.2
 langchain==0.0.348
 langchain-google-genai==1.0.1
-langchain-community==0.0.10
+langchain-community==0.3.27
 weaviate-client==3.25.3
 pinecone-client==2.2.4
 qdrant-client==1.7.0
