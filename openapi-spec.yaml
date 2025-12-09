@@ -1,0 +1,558 @@
+openapi: 3.1.0
+info:
+  title: Provider-Agnostic Agent Skills API
+  version: 1.0.0
+  description: >
+    Generic API for integrating "Skills" with any LLM provider's Messages/Chat API.
+    Supports Skills management, Files management, and a Messages endpoint that
+    accepts container.skills and code-execution tools.
+
+servers:
+  - url: https://api.your-runtime.example.com
+
+paths:
+  /v1/messages:
+    post:
+      summary: Create a message with optional Skills and code execution
+      operationId: createMessage
+      description: >
+        Send a chat/messages request to the model, optionally enabling Skills in
+        the container and allowing code execution.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMessageRequest'
+      responses:
+        '200':
+          description: Successful response from the model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          description: Bad request (e.g. invalid skills, invalid tools)
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /v1/skills:
+    get:
+      summary: List Skills
+      operationId: listSkills
+      parameters:
+        - name: source
+          in: query
+          required: false
+          description: Filter by skill source ("provider" or "custom")
+          schema:
+            type: string
+            enum: [provider, custom]
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of skills
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListSkillsResponse'
+        '401':
+          description: Unauthorized
+
+    post:
+      summary: Create a new Skill
+      operationId: createSkill
+      description: >
+        Upload a new Skill. The upload MUST include SKILL.md at the root,
+        share a common root directory, and be under the total size limit.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateSkillRequest'
+      responses:
+        '201':
+          description: Skill created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Skill'
+        '400':
+          description: Validation error (e.g. invalid SKILL.md, size too large)
+        '401':
+          description: Unauthorized
+
+  /v1/skills/{skill_id}:
+    get:
+      summary: Retrieve a Skill
+      operationId: retrieveSkill
+      parameters:
+        - $ref: '#/components/parameters/SkillId'
+      responses:
+        '200':
+          description: Skill details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Skill'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Skill not found
+
+    delete:
+      summary: Delete a Skill
+      operationId: deleteSkill
+      description: >
+        Delete a Skill. All versions MUST be deleted first, otherwise
+        a 400 error is returned.
+      parameters:
+        - $ref: '#/components/parameters/SkillId'
+      responses:
+        '204':
+          description: Skill deleted
+        '400':
+          description: Skill still has versions, cannot delete
+        '401':
+          description: Unauthorized
+        '404':
+          description: Skill not found
+
+  /v1/skills/{skill_id}/versions:
+    get:
+      summary: List versions for a Skill
+      operationId: listSkillVersions
+      parameters:
+        - $ref: '#/components/parameters/SkillId'
+      responses:
+        '200':
+          description: List of versions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListSkillVersionsResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Skill not found
+
+    post:
+      summary: Create a new version for a Skill
+      operationId: createSkillVersion
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateSkillVersionRequest'
+      parameters:
+        - $ref: '#/components/parameters/SkillId'
+      responses:
+        '201':
+          description: Version created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkillVersion'
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+        '404':
+          description: Skill not found
+
+  /v1/skills/{skill_id}/versions/{version}:
+    delete:
+      summary: Delete a specific Skill version
+      operationId: deleteSkillVersion
+      parameters:
+        - $ref: '#/components/parameters/SkillId'
+        - name: version
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Version deleted
+        '401':
+          description: Unauthorized
+        '404':
+          description: Version or Skill not found
+
+  /v1/files:
+    get:
+      summary: List files
+      operationId: listFiles
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of files
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListFilesResponse'
+        '401':
+          description: Unauthorized
+
+  /v1/files/{file_id}:
+    get:
+      summary: Retrieve file metadata
+      operationId: retrieveFileMetadata
+      parameters:
+        - $ref: '#/components/parameters/FileId'
+      responses:
+        '200':
+          description: File metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileMetadata'
+        '401':
+          description: Unauthorized
+        '404':
+          description: File not found
+
+    delete:
+      summary: Delete a file
+      operationId: deleteFile
+      parameters:
+        - $ref: '#/components/parameters/FileId'
+      responses:
+        '204':
+          description: File deleted
+        '401':
+          description: Unauthorized
+        '404':
+          description: File not found
+
+  /v1/files/{file_id}/content:
+    get:
+      summary: Download file content
+      operationId: downloadFile
+      parameters:
+        - $ref: '#/components/parameters/FileId'
+      responses:
+        '200':
+          description: File content
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Unauthorized
+        '404':
+          description: File not found
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    SkillId:
+      name: skill_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Unique identifier for the Skill
+    FileId:
+      name: file_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Unique identifier for the file
+
+  schemas:
+    CreateMessageRequest:
+      type: object
+      required:
+        - model
+        - messages
+      properties:
+        model:
+          type: string
+          description: Model identifier (e.g. gpt-4.1, claude-sonnet-4.5)
+        max_tokens:
+          type: integer
+          minimum: 1
+          description: Maximum number of tokens to generate
+        container:
+          $ref: '#/components/schemas/ContainerSpec'
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+        tools:
+          type: array
+          description: >
+            List of tools available to the model for this request.
+            At minimum, include a code-execution or equivalent tool to allow Skills to run code.
+          items:
+            $ref: '#/components/schemas/Tool'
+
+    Message:
+      type: object
+      required:
+        - role
+        - content
+      properties:
+        role:
+          type: string
+          enum: [user, assistant, system, tool]
+        content:
+          description: Free-form content; structure may depend on provider
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: object
+                additionalProperties: true
+
+    Tool:
+      type: object
+      required:
+        - type
+        - name
+      properties:
+        type:
+          type: string
+          description: Tool type identifier (e.g. "code_execution")
+        name:
+          type: string
+          description: Logical name for the tool
+
+    ContainerSpec:
+      type: object
+      description: Container configuration including enabled Skills.
+      properties:
+        id:
+          type: string
+          description: >
+            Optional container/session id. If provided, reuses an existing container
+            for multi-turn or long-running operations.
+        skills:
+          type: array
+          maxItems: 8
+          items:
+            $ref: '#/components/schemas/ContainerSkill'
+
+    ContainerSkill:
+      type: object
+      required:
+        - type
+        - skill_id
+      properties:
+        type:
+          type: string
+          description: Skill source type
+          enum: [provider, custom]
+        skill_id:
+          type: string
+          description: >
+            For provider skills, a short name (e.g. "pptx", "xlsx").
+            For custom skills, a generated id (e.g. "skill_01AbCdEfGhIjKlMnOpQrStUv").
+        version:
+          type: string
+          description: >
+            Version identifier. For provider skills, typically date-based (e.g. "20251013")
+            or "latest". For custom skills, an epoch string (e.g. "1759178010641129") or "latest".
+          default: latest
+
+    MessageResponse:
+      type: object
+      required:
+        - id
+        - content
+      properties:
+        id:
+          type: string
+        content:
+          description: >
+            Model's response content. May include tool results and references to files
+            created by Skills (e.g. objects containing file_id).
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: object
+                additionalProperties: true
+        stop_reason:
+          type: string
+          description: >
+            Indicates why the model stopped. "pause_turn" implies a long-running
+            operation that should be continued by sending this response content
+            back in a subsequent request.
+          enum:
+            - end_turn
+            - tool_use
+            - pause_turn
+            - null
+        container:
+          type: object
+          description: Container/session info
+          properties:
+            id:
+              type: string
+
+    Skill:
+      type: object
+      required:
+        - id
+        - display_title
+        - source
+        - latest_version
+        - created_at
+      properties:
+        id:
+          type: string
+        display_title:
+          type: string
+        source:
+          type: string
+          enum: [provider, custom]
+        latest_version:
+          type: string
+        created_at:
+          type: integer
+          format: int64
+        provider:
+          type: string
+          nullable: true
+          description: Optional provider label (e.g. "anthropic", "openai", "internal")
+
+    ListSkillsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Skill'
+        next_cursor:
+          type: string
+          nullable: true
+
+    CreateSkillRequest:
+      type: object
+      required:
+        - display_title
+        - files
+      properties:
+        display_title:
+          type: string
+        files:
+          type: array
+          description: >
+            Array of files. Implementation detail: in multipart/form-data, each item
+            is a file field. MUST include SKILL.md at the root. All files must share
+            a common root directory and total size must be under the provider limit.
+          items:
+            type: string
+            format: binary
+
+    SkillVersion:
+      type: object
+      required:
+        - skill_id
+        - version
+        - created_at
+      properties:
+        skill_id:
+          type: string
+        version:
+          type: string
+          description: Version identifier (e.g. epoch string for custom skills)
+        created_at:
+          type: integer
+          format: int64
+
+    ListSkillVersionsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SkillVersion'
+        next_cursor:
+          type: string
+          nullable: true
+
+    CreateSkillVersionRequest:
+      type: object
+      required:
+        - files
+      properties:
+        files:
+          type: array
+          description: >
+            New set of files representing this version. Same constraints as for
+            creating a Skill (must include SKILL.md, shared root, size limit).
+          items:
+            type: string
+            format: binary
+
+    FileMetadata:
+      type: object
+      required:
+        - id
+        - filename
+        - size_bytes
+        - created_at
+      properties:
+        id:
+          type: string
+        filename:
+          type: string
+        size_bytes:
+          type: integer
+          format: int64
+        created_at:
+          type: integer
+          format: int64
+
+    ListFilesResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileMetadata'
+        next_cursor:
+          type: string
+          nullable: true
+
+security:
+  - ApiKeyAuth: []

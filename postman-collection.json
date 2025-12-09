@@ -1,0 +1,396 @@
+{
+  "info": {
+    "name": "Agent Skills API",
+    "description": "Provider-Agnostic Agent Skills API collection for testing and development",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{api_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "api_token",
+      "value": "your-jwt-token-here",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/health",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "health"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "Create Message with Skills",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model\": \"gpt-4.1\",\n  \"max_tokens\": 1000,\n  \"container\": {\n    \"id\": \"container_123\",\n    \"skills\": [\n      {\n        \"type\": \"provider\",\n        \"skill_id\": \"pptx\",\n        \"version\": \"latest\"\n      },\n      {\n        \"type\": \"custom\",\n        \"skill_id\": \"skill_custom_001\",\n        \"version\": \"1759178010641129\"\n      }\n    ]\n  },\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Create a PowerPoint presentation about AI trends\"\n    }\n  ],\n  \"tools\": [\n    {\n      \"type\": \"code_execution\",\n      \"name\": \"code_executor\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/messages",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "messages"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "item": [
+    {
+      "name": "Skills Management",
+      "item": [
+        {
+          "name": "List Skills",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/skills",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "skills"
+              ],
+              "query": [
+                {
+                  "key": "source",
+                  "value": "provider",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "disabled": true
+                },
+                {
+                  "key": "cursor",
+                  "value": "next_cursor",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Skill",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "display_title",
+                  "value": "My Custom Skill",
+                  "type": "text"
+                },
+                {
+                  "key": "files",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/skills",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "skills"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Skill Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/skills/{{skill_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "skills",
+                "{{skill_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Skill",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/skills/{{skill_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "skills",
+                "{{skill_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Skill Versions",
+      "item": [
+        {
+          "name": "List Skill Versions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/skills/{{skill_id}}/versions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "skills",
+                "{{skill_id}}",
+                "versions"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Skill Version",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "files",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/skills/{{skill_id}}/versions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "skills",
+                "{{skill_id}}",
+                "versions"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Skill Version",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/skills/{{skill_id}}/versions/{{version}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "skills",
+                "{{skill_id}}",
+                "versions",
+                "{{version}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Files Management",
+      "item": [
+        {
+          "name": "List Files",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/files",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "files"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "disabled": true
+                },
+                {
+                  "key": "cursor",
+                  "value": "next_cursor",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get File Metadata",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/files/{{file_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "files",
+                "{{file_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Download File",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/files/{{file_id}}/content",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "files",
+                "{{file_id}}",
+                "content"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete File",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/files/{{file_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "files",
+                "{{file_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set default values for variables if not provided",
+          "if (!pm.environment.get('base_url')) {",
+          "  pm.environment.set('base_url', 'http://localhost:3001');",
+          "}",
+          "",
+          "// Generate a sample skill_id if not set",
+          "if (!pm.environment.get('skill_id')) {",
+          "  pm.environment.set('skill_id', 'skill_custom_001');",
+          "}",
+          "",
+          "// Generate a sample file_id if not set",
+          "if (!pm.environment.get('file_id')) {",
+          "  pm.environment.set('file_id', 'file_123456789');",
+          "}",
+          "",
+          "// Generate a sample version if not set",
+          "if (!pm.environment.get('version')) {",
+          "  pm.environment.set('version', '1759178010641129');",
+          "}"
+        ]
+      }
+    }
+  ]
+}

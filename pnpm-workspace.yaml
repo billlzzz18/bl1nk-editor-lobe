@@ -1,0 +1,10 @@
+# pnpm workspace configuration
+packages:
+  - 'src'
+  - 'server/*'
+  - 'agents'
+  - 'shared'
+  - 'plugins/*'
+
+# This tells pnpm to treat these directories as independent packages
+# and install their dependencies separately, but allow sharing between them
