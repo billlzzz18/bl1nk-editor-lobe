@@ -138,7 +138,7 @@
     "socket.io": "4.8.1",
     "server": "1.0.42",
     "dotenv": "17.2.3",
-    "@trpc/server": "11.7.2",
+    "@trpc/server": "11.8.0",
     "swagger-ui-express": "5.0.1",
     "axios": "1.13.2",
     "cookie": "1.1.1",
