@@ -33,7 +33,7 @@ google-ai-generativelanguage==0.6.4
 google-auth==2.25.2
 google-auth-oauthlib==1.2.0
 google-auth-httplib2==0.2.0
-gunicorn==21.2.0
+gunicorn==22.0.0
 python-jose==3.3.0
 passlib==1.7.4
 bcrypt==4.1.2
