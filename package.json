@@ -89,7 +89,7 @@
     "lexical": "0.38.2",
     "@lexical/history": "0.38.2",
     "eventemitter3": "5.0.1",
-    "lodash-es": "4.17.21",
+    "lodash-es": "4.17.23",
     "react-error-boundary": "6.0.0",
     "antd-style": "3.7.1",
     "@lexical/code": "0.38.2",
